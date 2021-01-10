@@ -16,13 +16,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 * Either run
 
 ```
-php composer.phar require --prefer-dist "himiklab/yii2-recaptcha-widget" "*"
+php composer.phar require --prefer-dist "overplex/yii2-recaptcha-widget" "*"
 ```
 
 or add
 
 ```json
-"himiklab/yii2-recaptcha-widget" : "*"
+"overplex/yii2-recaptcha-widget" : "*"
 ```
 
 to the `require` section of your application's `composer.json` file.
