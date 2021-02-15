@@ -86,6 +86,7 @@ class ReCaptcha3 extends InputWidget
     {
         parent::run();
         $view = $this->view;
+        $functionName = 'setReCaptchaToken' . uniqid(time());
 
         $arguments = \http_build_query([
             'render' => $this->siteKey,
@@ -95,25 +96,25 @@ class ReCaptcha3 extends InputWidget
             $this->jsApiUrl . '?' . $arguments,
             ['position' => $view::POS_END]
         );
-        $view->registerJs(
-            <<<JS
-"use strict";
-function setToken(){
-	grecaptcha.ready(function() {
-		grecaptcha.execute("{$this->siteKey}", {action: "{$this->action}"}).then(function(token) {
-			jQuery("#" + "{$this->getReCaptchaId()}").val(token);
-			const jsCallback = "{$this->jsCallback}";
-			if (jsCallback) {
-				eval("(" + jsCallback + ")(token)");
-			}
-		});
-	});
-}
-setToken();
-var timer = setInterval(setToken, 110000);
-JS
-            , $view::POS_READY);
 
+        $jsReady = <<<JS
+            "use strict";
+            function {$functionName}(){
+                grecaptcha.ready(function() {
+                    grecaptcha.execute("{$this->siteKey}", {action: "{$this->action}"}).then(function(token) {
+                        jQuery("#" + "{$this->getReCaptchaId()}").val(token);
+                        const jsCallback = "{$this->jsCallback}";
+                        if (jsCallback) {
+                            eval("(" + jsCallback + ")(token)");
+                        }
+                    });
+                });
+            }
+            {$functionName}();
+            setInterval({$functionName}, 110000);
+JS;
+
+        $view->registerJs($jsReady, $view::POS_READY);
         $this->customFieldPrepare();
     }
 
