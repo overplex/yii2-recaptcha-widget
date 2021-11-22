@@ -8,7 +8,6 @@
 namespace himiklab\yii2\recaptcha;
 
 use Yii;
-use yii\base\InvalidConfigException;
 use yii\helpers\Html;
 use yii\widgets\InputWidget;
 
@@ -85,6 +84,11 @@ class ReCaptcha3 extends InputWidget
     public function run()
     {
         parent::run();
+
+        if (!$this->siteKey) {
+            return '';
+        }
+
         $view = $this->view;
         $functionName = 'setReCaptchaToken' . uniqid(time());
 
@@ -158,10 +162,9 @@ JS;
         if (!$this->siteKey) {
             if ($reCaptchaConfig && $reCaptchaConfig->siteKeyV3) {
                 $this->siteKey = $reCaptchaConfig->siteKeyV3;
-            } else {
-                throw new InvalidConfigException('Required `siteKey` param isn\'t set.');
             }
         }
+
         if (!$this->jsApiUrl) {
             if ($reCaptchaConfig && $reCaptchaConfig->jsApiUrl) {
                 $this->jsApiUrl = $reCaptchaConfig->jsApiUrl;
@@ -169,6 +172,7 @@ JS;
                 $this->jsApiUrl = ReCaptchaConfig::JS_API_URL_DEFAULT;
             }
         }
+
         if (!$this->action) {
             $this->action = \preg_replace('/[^a-zA-Z\d\/]/', '', \urldecode(Yii::$app->request->url));
         }

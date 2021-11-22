@@ -9,7 +9,6 @@ namespace himiklab\yii2\recaptcha;
 
 use Yii;
 use yii\base\Exception;
-use yii\base\InvalidConfigException;
 
 /**
  * reCaptcha v3 widget validator.
@@ -25,6 +24,9 @@ class ReCaptchaValidator3 extends ReCaptchaBaseValidator
 
     /** @var string|boolean Set to false if you don`t need to check action. */
     public $action;
+
+    /** @var boolean Set to true if you need to pass validation if secret is associated with the wrong domain. */
+    public $skipOnWrongDomain;
 
     public function __construct(
         $secret = null,
@@ -64,7 +66,8 @@ class ReCaptchaValidator3 extends ReCaptchaBaseValidator
             } else {
                 $response = $this->getResponse($value);
                 if (isset($response['error-codes'])) {
-                    $this->isValid = false;
+                    $this->isValid = ($this->skipOnWrongDomain && is_array($response['error-codes']) &&
+                        in_array('incorrect-captcha-sol', $response['error-codes']));
                 } else {
                     if (!isset($response['success'], $response['action'], $response['hostname'], $response['score']) ||
                         $response['success'] !== true ||
@@ -97,7 +100,7 @@ class ReCaptchaValidator3 extends ReCaptchaBaseValidator
             if ($reCaptchaConfig && $reCaptchaConfig->secretV3) {
                 $this->secret = $reCaptchaConfig->secretV3;
             } else {
-                throw new InvalidConfigException('Required `secret` param isn\'t set.');
+                $this->skipOnEmpty = true;
             }
         }
     }
