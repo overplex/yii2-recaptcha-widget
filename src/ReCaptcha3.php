@@ -90,35 +90,58 @@ class ReCaptcha3 extends InputWidget
         }
 
         $view = $this->view;
-        $functionName = 'setReCaptchaToken' . uniqid(time());
-
-        $arguments = \http_build_query([
-            'render' => $this->siteKey,
-        ]);
-
-        $view->registerJsFile(
-            $this->jsApiUrl . '?' . $arguments,
-            ['position' => $view::POS_END]
-        );
+        $uniqueId = uniqid(time());
+        $functionName = 'setReCaptchaToken' . $uniqueId;
+        $initFunctionName = 'initSetReCaptchaToken' . $uniqueId;
 
         $jsReady = <<<JS
             "use strict";
-            function {$functionName}(){
-                grecaptcha.ready(function() {
-                    grecaptcha.execute("{$this->siteKey}", {action: "{$this->action}"}).then(function(token) {
-                        jQuery("#" + "{$this->getReCaptchaId()}").val(token);
-                        const jsCallback = "{$this->jsCallback}";
-                        if (jsCallback) {
-                            eval("(" + jsCallback + ")(token)");
-                        }
-                    });
-                });
+            function {$initFunctionName}() {
+				function {$functionName}() {
+					grecaptcha.ready(function() {
+						grecaptcha.execute("{$this->siteKey}", {action: "{$this->action}"}).then(function(token) {
+							jQuery("#" + "{$this->getReCaptchaId()}").val(token);
+							const jsCallback = "{$this->jsCallback}";
+							if (jsCallback) {
+								eval("(" + jsCallback + ")(token)");
+							}
+						});
+					});
+				}
+				{$functionName}();
+				setInterval({$functionName}, 110000);
             }
-            {$functionName}();
-            setInterval({$functionName}, 110000);
+			if (typeof window.reCaptchaFunctions === 'undefined') {
+				window.reCaptchaFunctions = [];
+			}
+			window.reCaptchaFunctions.push({$initFunctionName});
 JS;
-
         $view->registerJs($jsReady, $view::POS_READY);
+
+        $jsApiFullUrl = $this->jsApiUrl . '?' . \http_build_query([
+            'render' => $this->siteKey,
+        ]);
+
+        $jsReadyInit = <<<JS
+            "use strict";
+			function initReCaptcha() {
+				jQuery(document).off('click', initReCaptcha);
+				let script = document.createElement('script');
+				script.setAttribute('src', '{$jsApiFullUrl}');
+				document.head.appendChild(script);
+				script.onload = function() {
+					window.reCaptchaFunctions.forEach(function(func) {
+						func();
+					});
+				};
+			}
+			jQuery(document).on('click', initReCaptcha);
+JS;
+        if (!isset(Yii::$app->params['recaptcha_loaded'])) {
+            Yii::$app->params['recaptcha_loaded'] = true;
+            $view->registerJs($jsReadyInit, $view::POS_READY);
+        }
+
         $this->customFieldPrepare();
     }
 
