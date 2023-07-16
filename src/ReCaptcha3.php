@@ -125,7 +125,7 @@ JS;
         $jsReadyInit = <<<JS
             "use strict";
 			function initReCaptcha() {
-				jQuery(document).off('click', initReCaptcha);
+				jQuery(document).off('mousemove', initReCaptcha);
 				let script = document.createElement('script');
 				script.setAttribute('src', '{$jsApiFullUrl}');
 				document.head.appendChild(script);
@@ -135,7 +135,7 @@ JS;
 					});
 				};
 			}
-			jQuery(document).on('click', initReCaptcha);
+			jQuery(document).on('mousemove', initReCaptcha);
 JS;
         if (!isset(Yii::$app->params['recaptcha_loaded'])) {
             Yii::$app->params['recaptcha_loaded'] = true;
