@@ -126,6 +126,7 @@ JS;
             "use strict";
 			function initReCaptcha() {
 				jQuery(document).off('mousemove', initReCaptcha);
+				jQuery(document).off('touchmove', initReCaptcha);
 				let script = document.createElement('script');
 				script.setAttribute('src', '{$jsApiFullUrl}');
 				document.head.appendChild(script);
@@ -136,6 +137,7 @@ JS;
 				};
 			}
 			jQuery(document).on('mousemove', initReCaptcha);
+			jQuery(document).on('touchmove', initReCaptcha);
 JS;
         if (!isset(Yii::$app->params['recaptcha_loaded'])) {
             Yii::$app->params['recaptcha_loaded'] = true;
@@ -143,6 +145,8 @@ JS;
         }
 
         $this->customFieldPrepare();
+
+        return '';
     }
 
     protected function customFieldPrepare()
